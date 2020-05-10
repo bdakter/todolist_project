@@ -6,6 +6,7 @@ SimpleCov.start
 require 'minitest/autorun'
 require 'minitest/reporters'
 Minitest::Reporters.use!
+require 'date'
 
 require_relative '../lib/todo_list'
 
@@ -20,6 +21,16 @@ class TodoListTest < MiniTest::Test
     @list.add(@todo1)
     @list.add(@todo2)
     @list.add(@todo3)
+  end
+
+  def test_no_due_date
+    assert_nil(@todo1.due_date)
+  end
+
+  def test_due_date
+    due_date = Date.today + 3
+    @todo2.due_date = due_date
+    assert_equal(due_date, @todo2.due_date)
   end
 
   def test_to_a
@@ -151,6 +162,20 @@ class TodoListTest < MiniTest::Test
     assert_equal(output, @list.to_s)
   end
 
+  def test_to_s_with_due_date
+    @todo2.due_date = Date.new(2020, 5, 15)
+
+    output = <<~HEREDOC.chomp
+
+      ------ Today's Todos ------
+      [ ] Buy milk
+      [ ] Clean room (Due: Friday May 15)
+      [ ] Go to gym
+    HEREDOC
+
+    assert_equal(output, @list.to_s)
+  end
+
   def test_each_iterates
     results = []
     @list.each { |todo| results << todo }
@@ -200,5 +225,13 @@ class TodoListTest < MiniTest::Test
   def test_mark_all_not_done
     @list.mark_all_not_done
     assert_equal([], @list.all_dones.to_a)
+  end
+
+  def test_all_overdues
+    @todo1.due_date = Date.today - 1
+    @todo2.due_date = Date.today + 1
+    @todo3.due_date = Date.today - 1
+
+    assert_equal([@todo1, @todo3], @list.all_overdues.to_a)
   end
 end

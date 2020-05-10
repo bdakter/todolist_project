@@ -1,11 +1,15 @@
 #! /usr/bin/env ruby
 
+require 'bundler/setup'
+require 'stamp'
+require 'date'
+
 # item class
 class Todo
   DONE_MARKER = 'X'
   NOT_DONE_MARKER = ' '
 
-  attr_accessor :title, :description, :done_marker
+  attr_accessor :title, :description, :done_marker, :due_date
 
   def initialize(title, description = '')
     @title = title
@@ -26,7 +30,14 @@ class Todo
   end
 
   def to_s
-    "[#{done_marker}] #{title}"
+    result = "[#{done_marker}] #{title}"
+    result += due_date.stamp(' (Due: Friday January 6)') if due_date
+    result
+  end
+
+  def overdue?
+    today = Date.today
+    !done? && (today <=> due_date).positive?
   end
 end
 
@@ -147,21 +158,30 @@ class TodoList
     each(&:not_done!)
   end
 
+  def all_with_due_dates
+    select(&:due_date)
+  end
+
+  def all_overdues
+    all_with_due_dates.select(&:overdue?)
+  end
+
   private
 
   attr_accessor :todos
 end
 
-if __FILE__ == $0
-  todo1 = Todo.new("Buy milk")
-  todo2 = Todo.new("Clean room")
-  todo3 = Todo.new("Go to gym")
-  todos = [@todo1, @todo2, @todo3]
+if $PROGRAM_NAME == __FILE__
+  todo1 = Todo.new('Buy milk')
+  todo2 = Todo.new('Clean room')
+  todo3 = Todo.new('Go to gym')
 
   list = TodoList.new("Today's Todos")
   list.add(todo1)
   list.add(todo2)
   list.add(todo3)
 
-  puts list.find_by_title('Buy milk')
+  todo1.due_date = Date.today - 1
+  todo3.due_date = Date.today - 1
+  puts list.all_overdues
 end

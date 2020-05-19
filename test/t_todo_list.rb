@@ -1,10 +1,12 @@
 #! /usr/bin/env ruby
 
-require 'simplecov'
-SimpleCov.start
+# Uncomment to see coverage report
+# require 'simplecov'
+# SimpleCov.start
 
 require 'minitest/autorun'
 require 'minitest/reporters'
+
 Minitest::Reporters.use!
 require 'date'
 
